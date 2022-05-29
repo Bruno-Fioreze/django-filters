@@ -47,12 +47,18 @@ class API(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     #filterset_fields = ('name', "num_stars", "artist__first_name")
     filterset_class = AlbumFilter
+    paginate_by = 10
 
     def get_queryset(self):
-        import ipdb
-        ipdb.set_trace()
         queryset = self.queryset.filter(id=1)
-        
         return queryset
 
-     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
