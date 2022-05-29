@@ -42,10 +42,17 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 
 class API(generics.ListAPIView):
-    queryset = models.Album.objects.select_related("artist").all()
+    queryset = models.Album.objects.select_related("artist")
     serializer_class = AlbumSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     #filterset_fields = ('name', "num_stars", "artist__first_name")
     filterset_class = AlbumFilter
+
+    def get_queryset(self):
+        import ipdb
+        ipdb.set_trace()
+        queryset = self.queryset.filter(id=1)
+        
+        return queryset
 
      
