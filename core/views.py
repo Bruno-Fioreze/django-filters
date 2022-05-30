@@ -11,13 +11,7 @@ from rest_framework import serializers
 from django_filters import rest_framework as filters
 import django_filters
 
-class AlbumFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
-    artist__first_name = django_filters.CharFilter(lookup_expr='icontains')
-    
-    class Meta:
-        model = models.Album 
-        fields = ["name", "num_stars", "artist__first_name"]
+
 
 class MusicianSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +35,21 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "num_stars", "artist"]
 
 
+class AlbumFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr='icontains')
+    artist__first_name = django_filters.CharFilter(lookup_expr='icontains')
+    
+    class Meta:
+        model = models.Album 
+        fields = ["name", "num_stars", "artist__first_name"]
+
+class IsOwnerFilterBackend(filters.BaseFilterBackend):
+    """
+    Filter that only allows users to see their own objects.
+    """
+    def filter_queryset(self, request, queryset, view):
+        return queryset.filter(owner=request.user)
+
 class API(generics.ListAPIView):
     queryset = models.Album.objects.select_related("artist")
     serializer_class = AlbumSerializer
@@ -61,4 +70,8 @@ class API(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        data = {
+            "data": serializer.data,
+            "pagination": ""
+        }
+        return Response(data)
